@@ -3,30 +3,70 @@
 #include "sc2utils/sc2_manage_process.h"
 
 #include <iostream>
+#include <string>
+#include <fstream>
 
-const char* kReplayFolder = "E:/Replays/";
+const char* kReplayFolder = "INSERT FILE PATH HERE";
+
+
+class CSVWriter {
+public:
+    std::string filePath = "INSERT FILE PATH HERE";
+    std::string delimeter = ";";
+    bool first = true;
+
+    CSVWriter() {
+    }
+
+    void writeToFile(std::string x) {
+        std::fstream file;
+        file.open(filePath, std::ios_base::app);
+        file << x;
+        file.close();
+    }
+
+    void addColumn(std::string x) {
+        std::string res = "";
+        if (!first)
+            res.append(delimeter);
+        res.append(x);
+        first = false;
+        writeToFile(res);
+    }
+
+    void newRow() {
+        writeToFile("\n");
+        first = true;
+    }
+};
+
 
 class Replay : public sc2::ReplayObserver {
 public:
     std::vector<uint32_t> count_units_built_;
+    const sc2::ObservationInterface* obs;
+    CSVWriter writer;
 
     Replay() :
         sc2::ReplayObserver() {
     }
 
     void OnGameStart() final {
-        const sc2::ObservationInterface* obs = Observation();
+        obs = Observation();
         assert(obs->GetUnitTypeData().size() > 0);
         count_units_built_.resize(obs->GetUnitTypeData().size());
         std::fill(count_units_built_.begin(), count_units_built_.end(), 0);
     }
-    
+
     void OnUnitCreated(const sc2::Unit* unit) final {
         assert(uint32_t(unit->unit_type) < count_units_built_.size());
         ++count_units_built_[unit->unit_type];
     }
 
     void OnStep() final {
+        writer.addColumn(std::to_string(obs->GetPlayerID()));
+        if (obs->GetGameLoop() % 3000 == 0)
+            writer.newRow();
     }
 
     void OnGameEnd() final {
@@ -56,8 +96,14 @@ int main(int argc, char* argv[]) {
         return 1;
     }
 
-    Replay replay_observer;
+    coordinator.SetRealtime(false);
 
+    // NOTE You can modify step size here.
+    coordinator.SetStepSize(1000);
+
+    // NOTE You can modify perspective here.
+    coordinator.SetReplayPerspective(1);
+    Replay replay_observer;
     coordinator.AddReplayObserver(&replay_observer);
 
     while (coordinator.Update());

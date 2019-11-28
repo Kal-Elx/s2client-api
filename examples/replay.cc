@@ -47,6 +47,8 @@ public:
     const sc2::ObservationInterface* obs;
     CSVWriter writer;
 
+    std::vector<sc2::Point2D> base_locations;
+
     Replay() :
         sc2::ReplayObserver() {
     }
@@ -56,6 +58,11 @@ public:
         assert(obs->GetUnitTypeData().size() > 0);
         count_units_built_.resize(obs->GetUnitTypeData().size());
         std::fill(count_units_built_.begin(), count_units_built_.end(), 0);
+
+        base_locations = obs->GetGameInfo().start_locations;
+        for (sc2::Point2D base : base_locations) {
+            std::cout << base.x << " " << base.y << '\n';
+        }
     }
 
     void OnUnitCreated(const sc2::Unit* unit) final {
@@ -64,9 +71,9 @@ public:
     }
 
     void OnStep() final {
-        writer.addColumn(std::to_string(obs->GetPlayerID()));
+        /*writer.addColumn(std::to_string(obs->GetPlayerID()));
         if (obs->GetGameLoop() % 3000 == 0)
-            writer.newRow();
+            writer.newRow();*/
     }
 
     void OnGameEnd() final {
@@ -81,6 +88,22 @@ public:
             std::cout << unit_types[i].name << ": " << std::to_string(count_units_built_[i]) << std::endl;
         }
         std::cout << "Finished" << std::endl;
+    }
+
+    bool IgnoreReplay(const sc2::ReplayInfo& replay_info, uint32_t& /*player_id*/) {
+        /*
+        if (replay_info.num_players != 2)
+            return true;
+
+        // Only TvT.
+        for (int i = 0; i < replay_info.num_players; ++i)
+            if (replay_info.players[i].race != 0)
+                return true;
+
+        if (replay_info.map_name.find("Interloper LE") == std::string::npos)
+            return true;
+        */
+        return false;
     }
 };
 

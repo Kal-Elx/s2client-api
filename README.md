@@ -1,3 +1,5 @@
+See the [wiki](https://github.com/Kal-Elx/s2client-api/wiki) for instructions on how to get started.
+
 s2client-api
 ============
 

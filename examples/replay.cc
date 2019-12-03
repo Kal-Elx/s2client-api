@@ -12,7 +12,7 @@ const char* kReplayFolder = "INSERT FILE PATH HERE";
 class CSVWriter {
 public:
     std::string filePath = "INSERT FILE PATH HERE";
-    std::string delimeter = ";";
+    std::string delimiter = ";";
     bool first = true;
 
     CSVWriter() {
@@ -28,7 +28,7 @@ public:
     void addColumn(std::string x) {
         std::string res = "";
         if (!first)
-            res.append(delimeter);
+            res.append(delimiter);
         res.append(x);
         first = false;
         writeToFile(res);
